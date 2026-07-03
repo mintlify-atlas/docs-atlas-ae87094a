@@ -1,0 +1,60 @@
+---
+title: "Tienda de Playeras: SOA T-Shirt Inventory System"
+sidebarTitle: "Introduction"
+description: "Tienda de Playeras is a service-oriented t-shirt store manager. A Java/Jakarta EE backend serves a JSON REST API consumed by a Laravel 12 PHP frontend."
+---
+
+Tienda de Playeras is a university project built around a **Service-Oriented Architecture (SOA)** pattern. The system separates concerns across two independent, loosely-coupled components: a Java/Jakarta EE backend that owns all business logic and data persistence, and a Laravel PHP frontend that acts purely as a client, delegating every operation to the backend over HTTP. This decoupling means each component can be developed, deployed, and reasoned about in isolation — a practical demonstration of SOA principles in a real, runnable application.
+
+## What the System Does
+
+The application manages a t-shirt product catalog for a small store. Operators can add new t-shirt products, view the full inventory, edit product details, remove discontinued items, and record sales that automatically reduce stock. All state lives in a MySQL database owned exclusively by the Java backend; the Laravel frontend never touches the database directly.
+
+## Main Components
+
+**ServidorTiendaPlayeras** is a Java 17 / Jakarta EE 10 WAR deployed on Apache Tomcat. It exposes a single servlet — `ProductoServlet` — at `/ServidorTiendaPlayeras/ProductoServlet` and handles all CRUD operations plus inventory sales. Data is persisted in MySQL via JDBC, and responses are serialized to JSON using Gson.
+
+**ClienteTiendaPlayeras** is a Laravel 12 (PHP 8.2) web application. Its `PlayerasController` proxies every user action to the Java backend using Laravel's built-in HTTP client. The user interface is built with Bootstrap 5 Blade templates and renders the JSON responses received from the backend into human-friendly HTML pages.
+
+## Explore the Docs
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="sitemap" href="/architecture">
+    Understand how the Java backend and Laravel frontend are connected and how requests flow through the system.
+  </Card>
+  <Card title="Requirements" icon="circle-check" href="/getting-started/requirements">
+    See what software you need to run both components locally, including Java 17, Tomcat, MySQL, and PHP 8.2.
+  </Card>
+  <Card title="API Overview" icon="code" href="/api/overview">
+    Browse the REST endpoints exposed by `ProductoServlet`, their parameters, and example JSON responses.
+  </Card>
+  <Card title="Managing Products" icon="shirt" href="/guides/managing-products">
+    Step-by-step guides for creating, updating, selling, and deleting t-shirt products through the UI.
+  </Card>
+</CardGroup>
+
+## Features
+
+<Note>
+  All features listed below are derived directly from the implemented source code of both components.
+</Note>
+
+- **Full CRUD operations** — create, read, update, and delete t-shirt products through the Laravel UI or directly via the JSON API.
+- **Inventory tracking** — the `vender` (sell) action decrements the stock count for a product, keeping inventory accurate after each sale.
+- **Java REST API** — `ProductoServlet` exposes a clean HTTP interface returning `application/json` responses, making it consumable by any HTTP client.
+- **Laravel proxy client** — `PlayerasController` uses Laravel's `Illuminate\Support\Facades\Http` client to forward every UI action to the Java backend, keeping the frontend stateless with respect to data.
+- **Bootstrap 5 UI** — Blade templates styled with Bootstrap 5 provide a responsive, mobile-friendly interface without any custom CSS framework dependency.
+- **MySQL persistence** — all product data is stored in a `tienda_playeras` MySQL database, accessed from the Java layer via JDBC through the `Conexion` and `ProductoDAO` classes.
+
+## Technology Stack
+
+| Layer | Technology | Version |
+|---|---|---|
+| Backend language | Java | 17 |
+| Backend platform | Jakarta EE | 10 |
+| Application server | Apache Tomcat | — |
+| Database | MySQL | 8 |
+| JSON library | Gson | 2.10 |
+| Frontend framework | Laravel | 12 |
+| Frontend language | PHP | 8.2 |
+| UI component library | Bootstrap | 5 |

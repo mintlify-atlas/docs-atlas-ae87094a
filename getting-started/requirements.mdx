@@ -1,0 +1,38 @@
+---
+title: "Requirements for Running Tienda de Playeras"
+sidebarTitle: "Requirements"
+description: "System requirements and prerequisites for deploying both the Java backend and the Laravel frontend of Tienda de Playeras locally."
+---
+
+Before you can run Tienda de Playeras, you need to have several tools installed on your machine. The project is split into two components — a Java 17 / Jakarta EE 10 backend deployed on Apache Tomcat, and a Laravel 12 PHP frontend — each with its own set of prerequisites. Make sure everything listed below is in place before proceeding to the setup guides.
+
+## Backend Requirements
+
+The `ServidorTiendaPlayeras` WAR is built with Maven and deployed on Apache Tomcat. It connects to a MySQL database using JDBC with the credentials defined in `Conexion.java`.
+
+| Requirement | Minimum Version | Notes |
+|---|---|---|
+| Java JDK | 17 | Required to compile and run the Jakarta EE application |
+| Apache Maven | 3.6+ | Used to build the WAR via `mvn clean package` |
+| Apache Tomcat | 10+ | Must support Jakarta EE 10 (Tomcat 10+ uses the `jakarta.*` namespace) |
+| MySQL | 8.0+ | Stores product data in the `tienda_playeras` database |
+
+<Tip>
+  XAMPP is the recommended way to run MySQL locally. It bundles Apache and MySQL in a single installer and starts MySQL with the `root` user and an empty password — which matches the default credentials hardcoded in `Conexion.java`. Download it from [apachefriends.org](https://www.apachefriends.org/).
+</Tip>
+
+## Frontend Requirements
+
+The `ClienteTiendaPlayeras` Laravel application requires PHP, Composer, and Node.js to install dependencies and build frontend assets.
+
+| Requirement | Minimum Version | Notes |
+|---|---|---|
+| PHP | 8.2+ | Required by `"php": "^8.2"` in `composer.json` |
+| Composer | Latest stable | PHP dependency manager — installs Laravel and all packages |
+| Node.js | 18+ | Required to run `npm install` and `npm run build` for frontend assets |
+| npm | Bundled with Node.js | Manages JavaScript dependencies |
+| Laravel | 12 | Installed automatically via Composer from `composer.json` |
+
+<Note>
+  Both services must run on **localhost**. The backend must be on port **8080** and the frontend on port **8000**. The API endpoint is hardcoded in `PlayerasController.php` as `http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet` and cannot be changed at runtime without modifying the source code.
+</Note>

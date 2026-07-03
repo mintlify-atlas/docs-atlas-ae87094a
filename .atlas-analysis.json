@@ -1,0 +1,57 @@
+{
+  "projectType": "saas",
+  "projectName": "Tienda de Playeras",
+  "projectDescription": "A full-stack t-shirt store management system with a Java/Jakarta EE REST backend and a Laravel 12 web frontend, implementing complete CRUD operations and inventory management over a service-oriented architecture.",
+  "theme": "luma",
+  "primaryColor": "#E44D26",
+  "lightColor": "#FF6B4A",
+  "darkColor": "#B33000",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["introduction", "architecture"]
+          },
+          {
+            "group": "Getting Started",
+            "pages": ["getting-started/requirements", "getting-started/server-setup", "getting-started/client-setup"]
+          },
+          {
+            "group": "Using the Application",
+            "pages": ["guides/managing-products", "guides/selling-products"]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "ProductoServlet",
+            "pages": ["api/overview", "api/list-products", "api/create-product", "api/update-product", "api/delete-product", "api/sell-product"]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Service-Oriented Architecture (SOA) with a decoupled Java backend and Laravel frontend",
+    "Full CRUD operations for t-shirt product catalog (create, read, update, delete)",
+    "Inventory management with atomic stock decrement on sale",
+    "Java/Jakarta EE 10 servlet exposing a JSON REST API on Apache Tomcat",
+    "Laravel 12 PHP client that proxies all operations to the Java service via HTTP",
+    "CORS-enabled REST API with GET, POST, PUT, DELETE and OPTIONS support",
+    "MySQL database via JDBC with parameterized queries",
+    "Bootstrap 5 UI with product cards, modals for create/edit, and sale forms"
+  ],
+  "publicApiSurface": [
+    "GET /ServidorTiendaPlayeras/ProductoServlet — list all products as JSON array",
+    "POST /ServidorTiendaPlayeras/ProductoServlet (accion=crear) — create a new product",
+    "PUT /ServidorTiendaPlayeras/ProductoServlet?id={id}&nombre=...&talla=...&precio=...&stock=... — update a product",
+    "DELETE /ServidorTiendaPlayeras/ProductoServlet?id={id} — delete a product",
+    "POST /ServidorTiendaPlayeras/ProductoServlet (accion=vender) — sell a quantity of a product",
+    "Producto model: { id: int, nombre: string, talla: string, precio: double, stock: int }"
+  ]
+}

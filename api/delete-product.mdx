@@ -1,0 +1,54 @@
+---
+title: "DELETE /ProductoServlet — Remove a Product"
+sidebarTitle: "Delete Product"
+description: "DELETE /ServidorTiendaPlayeras/ProductoServlet?id={id} to permanently remove a product from the database. Returns a JSON success flag."
+---
+
+Sending a `DELETE` request to the `ProductoServlet` endpoint permanently removes a product from the `productos` table by its primary key. The product ID is passed as a query-string parameter. If the deletion succeeds the servlet returns `{"success": true}`; if it fails (e.g., the ID does not exist or a database error occurs) it returns `{"success": false}`.
+
+## Request
+
+**Method:** `DELETE`  
+**URL:** `http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet?id={id}`
+
+### Parameters
+
+<ParamField query="id" type="integer" required>
+  The primary-key ID of the product to permanently delete.
+</ParamField>
+
+### curl Example
+
+```bash
+curl -X DELETE "http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet?id=1"
+```
+
+### PHP (Laravel) Example
+
+The `PlayerasController::destroy()` method appends the `id` directly to the base URL:
+
+```php
+Http::delete($this->apiUrl . "?id={$id}");
+```
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  `true` if the product was deleted successfully; `false` if the `DELETE` statement failed.
+</ResponseField>
+
+**Success:**
+
+```json
+{ "success": true }
+```
+
+**Failure:**
+
+```json
+{ "success": false }
+```
+
+<Warning>
+  Deletion is **permanent**. The servlet executes `DELETE FROM productos WHERE id = ?` with no soft-delete, archive, or undo mechanism. Once a product is deleted, it cannot be recovered through this API.
+</Warning>

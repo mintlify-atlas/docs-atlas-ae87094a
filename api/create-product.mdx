@@ -1,0 +1,74 @@
+---
+title: "POST /ProductoServlet — Create a Product"
+sidebarTitle: "Create Product"
+description: "POST /ServidorTiendaPlayeras/ProductoServlet with accion=crear to insert a new t-shirt product. Accepts form-encoded parameters, returns JSON success flag."
+---
+
+Sending a `POST` request with `accion=crear` inserts a new product into the `productos` table. The request body must be form-encoded (`application/x-www-form-urlencoded`). On success the servlet returns `{"success": true}`; if the `INSERT` fails for any reason it returns `{"success": false}`.
+
+## Request
+
+**Method:** `POST`  
+**URL:** `http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet`  
+**Content-Type:** `application/x-www-form-urlencoded`
+
+### Parameters
+
+<ParamField body="accion" type="string" required>
+  Dispatch key for the POST handler. Must be exactly `"crear"` to reach the create branch.
+</ParamField>
+
+<ParamField body="nombre" type="string" required>
+  The product name, e.g. `"Playera Oversize Anime"`.
+</ParamField>
+
+<ParamField body="talla" type="string" required>
+  The t-shirt size. Accepted values: `CH`, `M`, `G`, `XG`.
+</ParamField>
+
+<ParamField body="precio" type="number" required>
+  The price in Mexican Pesos (MXN). Parsed server-side as a `double`, e.g. `299.90`.
+</ParamField>
+
+<ParamField body="stock" type="integer" required>
+  The initial inventory count. Parsed server-side as an `int`, e.g. `20`.
+</ParamField>
+
+### curl Example
+
+```bash
+curl -X POST http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet \
+  -d "accion=crear&nombre=Playera+Oversize+Anime&talla=M&precio=299.90&stock=20"
+```
+
+### PHP (Laravel) Example
+
+The `PlayerasController::store()` method uses Laravel's HTTP client with `asForm()` to send a form-encoded POST request:
+
+```php
+Http::asForm()->post($this->apiUrl, [
+    'accion'  => 'crear',
+    'nombre'  => $request->nombre,
+    'talla'   => $request->talla,
+    'precio'  => $request->precio,
+    'stock'   => $request->stock,
+]);
+```
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  `true` if the product was inserted successfully; `false` if the `INSERT` statement failed (e.g., due to a constraint violation or database error).
+</ResponseField>
+
+**Success:**
+
+```json
+{ "success": true }
+```
+
+**Failure:**
+
+```json
+{ "success": false }
+```

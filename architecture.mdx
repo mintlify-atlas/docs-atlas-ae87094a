@@ -1,0 +1,87 @@
+---
+title: "System Architecture: How the SOA Components Connect"
+sidebarTitle: "Architecture"
+description: "Explore how the Java/Jakarta EE backend and Laravel frontend are decoupled in a service-oriented architecture, communicating via HTTP REST calls over localhost."
+---
+
+Tienda de Playeras is designed around a **Service-Oriented Architecture (SOA)** pattern: each capability of the system is encapsulated in a discrete, self-contained service that communicates with other services over a well-defined network interface. In practice this means the Java backend is the sole owner of business rules and data, exposing them as an HTTP/JSON API, while the Laravel frontend is a pure consumer of that API — it holds no business logic and has no direct database access. The two services run as separate processes on the same machine and communicate exclusively through HTTP calls over localhost.
+
+## Component Overview
+
+### ServidorTiendaPlayeras — Java Backend
+
+`ServidorTiendaPlayeras` is packaged as a WAR and deployed on **Apache Tomcat**, listening on **port 8080**. Its entry point is a single Jakarta EE servlet:
+
+```
+http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet
+```
+
+The servlet is implemented in `com.tienda.controller.ProductoServlet` and is annotated with `@WebServlet(urlPatterns = {"/ProductoServlet"})`. It delegates all data access to `ProductoDAO` (`com.tienda.dao`), which uses plain JDBC through `Conexion` to talk to MySQL. Responses are always serialized to JSON with **Gson 2.10** and sent with `Content-Type: application/json;charset=UTF-8`.
+
+### ClienteTiendaPlayeras — Laravel Frontend
+
+`ClienteTiendaPlayeras` is a **Laravel 12** application running on **PHP 8.2**, served on **port 8000** (default `php artisan serve` port). It owns no database of its own. Instead, `PlayerasController` (`app/Http/Controllers/PlayerasController.php`) proxies every incoming HTTP request to the Java backend using `Illuminate\Support\Facades\Http`. Blade templates styled with **Bootstrap 5** consume the data returned by the controller and render the final HTML to the browser.
+
+## Request Flow
+
+The following steps trace a complete round-trip for any user action (create, read, update, delete, or sell):
+
+<Steps>
+  <Step title="User submits a form or triggers an action">
+    The operator interacts with the Bootstrap 5 interface served at `http://localhost:8000`. This produces an HTTP request (GET, POST, PUT, or DELETE) directed at a Laravel route — for example, `POST /store` to create a product or `POST /vender/{id}` to record a sale.
+  </Step>
+  <Step title="Laravel router dispatches to PlayerasController">
+    Laravel's router matches the request to the corresponding route defined in `routes/web.php` and invokes the appropriate method on `PlayerasController` — such as `store()`, `update()`, `destroy()`, or `vender()`.
+  </Step>
+  <Step title="PlayerasController forwards the call to the Java API">
+    The controller method constructs an outbound HTTP request using `Illuminate\Support\Facades\Http` and sends it to the hardcoded backend URL:
+
+    ```
+    http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet
+    ```
+
+    Query parameters (such as `accion=crear` or `accion=vender`) and any request body are forwarded as required by the operation being performed.
+  </Step>
+  <Step title="ProductoServlet processes the request">
+    Tomcat routes the inbound request to `ProductoServlet`. The servlet reads the HTTP method and any parameters, then delegates to the appropriate `ProductoDAO` method: `listar()`, `insertar()`, `actualizar()`, `eliminar()`, or `vender()`.
+  </Step>
+  <Step title="ProductoDAO queries MySQL and maps results">
+    `ProductoDAO` uses the JDBC connection from `Conexion` to execute SQL against the `tienda_playeras` database on **port 3306**. Result sets are mapped row-by-row into `Producto` model objects (`com.tienda.model.Producto`). `ProductoServlet` then serializes the result — a single object or a list — to JSON using Gson and writes it to the HTTP response.
+  </Step>
+  <Step title="Laravel receives the JSON and renders the Blade view">
+    `PlayerasController` receives the JSON response from the Java backend. It decodes the payload and passes the data to the appropriate Blade template. Laravel renders the template to HTML and returns the final response to the user's browser on port 8000.
+  </Step>
+</Steps>
+
+## Data Model
+
+All product data is represented by the `Producto` class (`com.tienda.model.Producto`) on the Java side and stored in MySQL. The table structure maps directly to the model's fields:
+
+| Field | MySQL Type | Constraints | Description |
+|---|---|---|---|
+| `id` | `INT` | Primary key, auto-increment | Unique product identifier |
+| `nombre` | `VARCHAR` | Not null | Product name (e.g., "Playera Básica") |
+| `talla` | `ENUM` | Values: `CH`, `M`, `G`, `XG` | T-shirt size |
+| `precio` | `DECIMAL` | Not null | Unit price |
+| `stock` | `INT` | Not null | Units currently in inventory |
+
+The `vender(int id, int cantidad)` method in `ProductoDAO` decrements `stock` by `cantidad` for the given product id, keeping inventory counts consistent after every sale operation.
+
+## CORS Configuration
+
+`ProductoServlet` applies CORS headers to every response through the private helper method `configurarCORS()`:
+
+```java
+private void configurarCORS(HttpServletResponse response) {
+    response.addHeader("Access-Control-Allow-Origin", "*");
+    response.addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    response.addHeader("Access-Control-Allow-Headers", "Content-Type");
+    response.setContentType("application/json;charset=UTF-8");
+}
+```
+
+Setting `Access-Control-Allow-Origin: *` means the API will accept cross-origin requests from **any** domain or port. All HTTP methods used by the application — `GET`, `POST`, `PUT`, `DELETE`, and the preflight `OPTIONS` — are explicitly permitted. This configuration makes it straightforward to consume the API from a browser-based client or any other HTTP consumer beyond the Laravel frontend.
+
+<Note>
+  Both services must run on the **same machine** (localhost). The backend URL is hardcoded in `PlayerasController` as `http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet`, so the Java backend must be reachable on port 8080 of the same host where the Laravel application is running. There is no environment variable or configuration file to override this URL without modifying the controller source code.
+</Note>

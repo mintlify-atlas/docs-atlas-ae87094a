@@ -1,0 +1,80 @@
+---
+title: "POST /ProductoServlet — Sell a Product"
+sidebarTitle: "Sell Product"
+description: "POST /ServidorTiendaPlayeras/ProductoServlet with accion=vender to decrement a product's stock. Returns false if stock is insufficient, preventing overselling."
+---
+
+Sending a `POST` request with `accion=vender` decrements the `stock` of a product by a given quantity. The operation is **atomic**: the SQL statement only executes the decrement if the current stock is sufficient, preventing overselling even under concurrent requests. If the update affects zero rows — because the product does not exist or has insufficient stock — the servlet returns `{"success": false}`.
+
+## Request
+
+**Method:** `POST`  
+**URL:** `http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet`  
+**Content-Type:** `application/x-www-form-urlencoded`
+
+### Parameters
+
+<ParamField body="accion" type="string" required>
+  Dispatch key for the POST handler. Must be exactly `"vender"` to reach the sell branch.
+</ParamField>
+
+<ParamField body="id" type="integer" required>
+  The primary-key ID of the product to sell.
+</ParamField>
+
+<ParamField body="cantidad" type="integer">
+  The number of units to sell. Defaults to `1` if this parameter is omitted or not provided.
+</ParamField>
+
+### curl Example
+
+```bash
+curl -X POST http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet \
+  -d "accion=vender&id=1&cantidad=3"
+```
+
+### PHP (Laravel) Example
+
+The `PlayerasController::vender()` method casts both `id` and `cantidad` to integers before sending to avoid type coercion issues:
+
+```php
+Http::asForm()->post($this->apiUrl, [
+    'accion'   => 'vender',
+    'id'       => (int) $id,
+    'cantidad' => (int) $cantidad,
+]);
+```
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  `true` if the stock was decremented successfully (the sale was recorded); `false` if the product was not found or did not have enough stock to fulfill the requested quantity.
+</ResponseField>
+
+**Success:**
+
+```json
+{ "success": true }
+```
+
+**Failure (insufficient stock or product not found):**
+
+```json
+{ "success": false }
+```
+
+## Atomic Stock Guard
+
+The sell operation uses a single `UPDATE` statement with a conditional `WHERE` clause to prevent overselling without requiring a separate read or a transaction lock:
+
+```sql
+UPDATE productos SET stock = stock - ? WHERE id = ? AND stock >= ?
+```
+
+The `AND stock >= ?` condition means the database will only modify the row if the current `stock` value is greater than or equal to the requested `cantidad`. If the condition is not met, the statement updates **zero rows**, and the DAO layer interprets that as a failed sale, returning `false` to the servlet which then responds with `{"success": false}`.
+
+This approach is race-condition safe: because the check and the decrement happen inside a single atomic SQL statement, two concurrent requests cannot both read the same stock value and both succeed when only one unit remains.
+
+<Note>
+  If `cantidad` is omitted from the request, the servlet defaults it to `1`. You can therefore sell a single unit by sending only `accion=vender&id={id}` without specifying `cantidad`.
+</Note>

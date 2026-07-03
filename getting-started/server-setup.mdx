@@ -1,0 +1,91 @@
+---
+title: "Deploy the Java Backend on Apache Tomcat"
+sidebarTitle: "Server Setup"
+description: "Step-by-step guide to building the ServidorTiendaPlayeras WAR with Maven and deploying it to Apache Tomcat 10 with a MySQL database."
+---
+
+The `ServidorTiendaPlayeras` backend is a Jakarta EE 10 WAR artifact built with Maven. It exposes a single servlet — `ProductoServlet` — at `/ServidorTiendaPlayeras/ProductoServlet` that handles all product CRUD and sell operations via HTTP. Follow the steps below to create the database, build the WAR, and get it running on Apache Tomcat.
+
+<Warning>
+  `Conexion.java` hardcodes the database credentials as user `root` with an **empty password**. This matches the XAMPP default and is suitable for local development only. Before deploying to any shared or production environment, update `URL`, `USER`, and `PASSWORD` in `Conexion.java` to use a dedicated database user with a strong password.
+</Warning>
+
+<Steps>
+  <Step title="Create the database">
+    Start your MySQL server (via XAMPP Control Panel or your system service manager), then run the following SQL to create the database and the `productos` table:
+
+    ```sql
+    CREATE DATABASE IF NOT EXISTS tienda_playeras;
+    USE tienda_playeras;
+
+    CREATE TABLE IF NOT EXISTS productos (
+        id     INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(100)   NOT NULL,
+        talla  VARCHAR(10)    NOT NULL,
+        precio DECIMAL(10,2)  NOT NULL,
+        stock  INT            NOT NULL DEFAULT 0
+    );
+    ```
+
+    You can execute this in the XAMPP phpMyAdmin interface, MySQL Workbench, or directly from the MySQL CLI:
+
+    ```bash
+    mysql -u root < schema.sql
+    ```
+  </Step>
+
+  <Step title="Build the WAR">
+    Navigate to the `ServidorTiendaPlayeras` directory and run the Maven build:
+
+    ```bash
+    cd ServidorTiendaPlayeras
+    mvn clean package
+    ```
+
+    Maven will compile the sources with Java 17, package the Jakarta EE 10 WAR, and bundle the `mysql-connector-j:8.3.0` and `gson:2.10.1` runtime dependencies. The finished artifact is placed at:
+
+    ```
+    target/ServidorTiendaPlayeras-1.0-SNAPSHOT.war
+    ```
+  </Step>
+
+  <Step title="Deploy to Tomcat">
+    Copy the WAR file into Tomcat's `webapps/` directory:
+
+    ```bash
+    cp target/ServidorTiendaPlayeras-1.0-SNAPSHOT.war /path/to/tomcat/webapps/
+    ```
+
+    Tomcat will detect the new WAR and auto-deploy it. The `context.xml` sets the context path to `/ServidorTiendaPlayeras`, so the application root becomes:
+
+    ```
+    http://localhost:8080/ServidorTiendaPlayeras/
+    ```
+
+    If Tomcat is not already running, start it with:
+
+    ```bash
+    # Linux / macOS
+    /path/to/tomcat/bin/startup.sh
+
+    # Windows
+    \path\to\tomcat\bin\startup.bat
+    ```
+  </Step>
+
+  <Step title="Verify deployment">
+    Once Tomcat has deployed the WAR, verify the servlet is responding by making a GET request to the `ProductoServlet` endpoint. With an empty database it should return an empty JSON array.
+
+    ```bash
+    curl http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet
+    ```
+
+    Expected response:
+
+    ```json
+    []
+    ```
+
+    A `404` response means the WAR was not deployed correctly — check the Tomcat `logs/catalina.out` file for errors. A database connection error usually means MySQL is not running or the credentials in `Conexion.java` do not match your setup.
+  </Step>
+</Steps>

@@ -1,0 +1,74 @@
+---
+title: "ProductoServlet REST API Overview"
+sidebarTitle: "Overview"
+description: "Overview of the ProductoServlet REST API: base URL, CORS policy, response format, and the Producto data model used across all endpoints."
+---
+
+The **ProductoServlet** is a single Jakarta EE 10 Servlet that exposes a REST-style API for managing t-shirt products in the Tienda de Playeras application. It handles five HTTP methods — `GET`, `POST`, `PUT`, `DELETE`, and `OPTIONS` — all routed through a single endpoint mounted on the `ServidorTiendaPlayeras` web application.
+
+## Base URL
+
+All requests are made to the following base URL:
+
+```
+http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet
+```
+
+## CORS
+
+The servlet adds CORS headers to **every response**, including error responses. This allows browser-based clients running on any origin to call the API directly.
+
+```
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+Access-Control-Allow-Headers: Content-Type
+```
+
+For browser preflight checks, the servlet implements `doOptions()`, which returns HTTP `200` with the CORS headers and an empty body.
+
+## Content Type
+
+All responses are returned as JSON with UTF-8 encoding:
+
+```
+Content-Type: application/json;charset=UTF-8
+```
+
+## Producto Object
+
+Every endpoint that returns product data uses the following `Producto` model:
+
+<ResponseField name="id" type="integer">
+  Auto-increment primary key. Assigned by the database on insertion — do not provide this field when creating a product.
+</ResponseField>
+
+<ResponseField name="nombre" type="string">
+  The product name, e.g. `"Playera Oversize Anime"`.
+</ResponseField>
+
+<ResponseField name="talla" type="string">
+  The t-shirt size. Accepted values: `CH`, `M`, `G`, `XG`.
+</ResponseField>
+
+<ResponseField name="precio" type="number">
+  The price in Mexican Pesos (MXN), stored as a `double`.
+</ResponseField>
+
+<ResponseField name="stock" type="integer">
+  The number of units currently available in inventory.
+</ResponseField>
+
+## Endpoints Summary
+
+| Method   | Path               | Action         | Description                        |
+|----------|--------------------|----------------|------------------------------------|
+| GET      | /ProductoServlet   | —              | List all products                  |
+| POST     | /ProductoServlet   | accion=crear   | Create a product                   |
+| PUT      | /ProductoServlet   | —              | Update a product                   |
+| DELETE   | /ProductoServlet   | —              | Delete a product                   |
+| POST     | /ProductoServlet   | accion=vender  | Sell a product (decrement stock)   |
+| OPTIONS  | /ProductoServlet   | —              | CORS preflight                     |
+
+<Note>
+  This API has **no authentication**. It is designed exclusively for localhost development use. Do not expose `ServidorTiendaPlayeras` on a public network without adding an authentication layer.
+</Note>

@@ -1,0 +1,77 @@
+---
+title: "PUT /ProductoServlet — Update a Product"
+sidebarTitle: "Update Product"
+description: "PUT /ServidorTiendaPlayeras/ProductoServlet?id={id}&... to update all fields of a product by ID. Accepts query-string parameters, returns JSON success flag."
+---
+
+Sending a `PUT` request to the `ProductoServlet` endpoint updates all fields of an existing product identified by its `id`. All parameters are passed as **query-string values** rather than a request body — this is intentional, because Tomcat's built-in servlet infrastructure does not parse `PUT` request bodies as form parameters, making query strings the most reliable approach for passing data through `doPut()`.
+
+## Request
+
+**Method:** `PUT`  
+**URL:** `http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet?id={id}&nombre={nombre}&talla={talla}&precio={precio}&stock={stock}`
+
+### Parameters
+
+<ParamField query="id" type="integer" required>
+  The primary-key ID of the product to update.
+</ParamField>
+
+<ParamField query="nombre" type="string" required>
+  The new product name. URL-encode any spaces or special characters (e.g., use `%20` or `+` for spaces).
+</ParamField>
+
+<ParamField query="talla" type="string" required>
+  The new t-shirt size. Accepted values: `CH`, `M`, `G`, `XG`.
+</ParamField>
+
+<ParamField query="precio" type="number" required>
+  The new price in Mexican Pesos (MXN). Parsed server-side as a `double`.
+</ParamField>
+
+<ParamField query="stock" type="integer" required>
+  The new inventory count. Parsed server-side as an `int`.
+</ParamField>
+
+### curl Example
+
+```bash
+curl -X PUT "http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet?id=1&nombre=Playera%20Oversize&talla=G&precio=350.00&stock=10"
+```
+
+### PHP (Laravel) Example
+
+The `PlayerasController::update()` method builds the query string manually, using `urlencode()` on `nombre` to handle special characters:
+
+```php
+Http::put(
+    $this->apiUrl
+        . "?id={$id}"
+        . "&nombre=" . urlencode($nombre)
+        . "&talla={$talla}"
+        . "&precio={$precio}"
+        . "&stock={$stock}"
+);
+```
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  `true` if the `UPDATE` statement executed successfully; `false` if the update failed (e.g., no row with the given `id` exists, or a database error occurred).
+</ResponseField>
+
+**Success:**
+
+```json
+{ "success": true }
+```
+
+**Failure:**
+
+```json
+{ "success": false }
+```
+
+<Note>
+  All five parameters — `id`, `nombre`, `talla`, `precio`, and `stock` — are required. Omitting `id`, `precio`, or `stock` will cause a `NumberFormatException` on the server when the servlet attempts to parse the missing value, resulting in `{"success": false}`.
+</Note>

@@ -1,0 +1,69 @@
+---
+title: "GET /ProductoServlet — List All Products"
+sidebarTitle: "List Products"
+description: "GET /ServidorTiendaPlayeras/ProductoServlet — retrieves all products from the database. Returns a JSON array of Producto objects, or [] if empty."
+---
+
+Sending a `GET` request to the `ProductoServlet` endpoint retrieves all t-shirt products currently stored in the database. The servlet executes `SELECT * FROM productos` and serializes the result set as a JSON array. No query parameters or request body are required.
+
+## Request
+
+**Method:** `GET`  
+**URL:** `http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet`
+
+No parameters are accepted or required for this endpoint.
+
+### curl Example
+
+```bash
+curl http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet
+```
+
+## Response
+
+The response is a JSON array of `Producto` objects. Each element in the array represents one product row from the `productos` table.
+
+```json
+[
+  {
+    "id": 1,
+    "nombre": "Playera Oversize Anime",
+    "talla": "M",
+    "precio": 299.90,
+    "stock": 15
+  },
+  {
+    "id": 2,
+    "nombre": "Playera Básica Blanca",
+    "talla": "G",
+    "precio": 149.50,
+    "stock": 0
+  }
+]
+```
+
+### Response Fields
+
+<ResponseField name="id" type="integer">
+  The unique auto-increment identifier for the product.
+</ResponseField>
+
+<ResponseField name="nombre" type="string">
+  The product name.
+</ResponseField>
+
+<ResponseField name="talla" type="string">
+  The t-shirt size. One of: `CH`, `M`, `G`, `XG`.
+</ResponseField>
+
+<ResponseField name="precio" type="number">
+  The price in Mexican Pesos (MXN).
+</ResponseField>
+
+<ResponseField name="stock" type="integer">
+  The number of units currently in inventory. Products with `stock: 0` are out of stock but remain in the catalog.
+</ResponseField>
+
+<Note>
+  If the database contains no products, the endpoint returns an empty array `[]`. Server-side errors (e.g., a lost database connection) also return `[]` — the exception is logged on the server but not surfaced in the response body.
+</Note>

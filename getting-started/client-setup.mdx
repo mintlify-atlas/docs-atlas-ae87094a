@@ -1,0 +1,83 @@
+---
+title: "Configure and Run the Laravel Frontend"
+sidebarTitle: "Client Setup"
+description: "Install dependencies and start the Laravel 12 client application that connects to the Tienda de Playeras Java backend service."
+---
+
+The `ClienteTiendaPlayeras` application is a Laravel 12 PHP frontend that communicates with the Java backend through `PlayerasController`. The controller proxies every CRUD and sell operation to the `ServidorTiendaPlayeras` servlet using Laravel's HTTP client — the Laravel app itself does not persist any product data. Make sure the Java backend is already running before you start the client.
+
+<Note>
+  The Laravel application does **not** store product data locally. Every request — listing, creating, updating, deleting, and selling products — is forwarded to the Java backend at `http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet`. The local SQLite database is used only for Laravel internals such as sessions and cache.
+</Note>
+
+<Steps>
+  <Step title="Install PHP dependencies">
+    Navigate to the `ClienteTiendaPlayeras` directory and install all Composer packages, including Laravel 12 and Laravel Tinker:
+
+    ```bash
+    cd ClienteTiendaPlayeras
+    composer install
+    ```
+  </Step>
+
+  <Step title="Set up the environment file">
+    Copy the example environment file and generate a unique application key:
+
+    ```bash
+    cp .env.example .env
+    php artisan key:generate
+    ```
+
+    The default `.env.example` configures SQLite as the database connection (`DB_CONNECTION=sqlite`), which is suitable for the client — it only needs a local database for Laravel's own session and cache tables, not for product data.
+  </Step>
+
+  <Step title="Run database migrations">
+    Create the SQLite database file and run the migrations to set up Laravel's internal tables (sessions, cache, jobs, etc.):
+
+    ```bash
+    php artisan migrate
+    ```
+  </Step>
+
+  <Step title="Install and build frontend assets">
+    Install the Node.js dependencies and compile the frontend assets:
+
+    ```bash
+    npm install && npm run build
+    ```
+  </Step>
+
+  <Step title="Start the development server">
+    Start the Laravel development server:
+
+    ```bash
+    php artisan serve
+    ```
+
+    The application will be available at `http://localhost:8000`. Open your browser and navigate there to see the product listing page, which fetches data live from the Java backend.
+  </Step>
+</Steps>
+
+## Available Routes
+
+All product operations are handled by `PlayerasController` and routed through the following endpoints:
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/` | List all products |
+| POST | `/store` | Create a new product |
+| PUT | `/update/{id}` | Update an existing product by ID |
+| DELETE | `/destroy/{id}` | Delete a product by ID |
+| POST | `/vender/{id}` | Sell (decrement stock of) a product by ID |
+
+## Running All Services Together
+
+<Tip>
+  The `composer.json` includes a `dev` script that starts the Laravel server, queue worker, Pail log viewer, and Vite dev server all at once with color-coded output — useful when actively developing the frontend:
+
+  ```bash
+  composer run dev
+  ```
+
+  Use `composer run dev` only in development. For a production-like preview, build assets with `npm run build` and serve with `php artisan serve` as shown in the steps above.
+</Tip>

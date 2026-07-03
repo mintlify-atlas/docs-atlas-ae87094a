@@ -1,0 +1,103 @@
+---
+title: "Manage Your T-Shirt Product Catalog"
+sidebarTitle: "Managing Products"
+description: "Learn how to add, edit, and remove t-shirt products in Tienda de Playeras using the web dashboard. All changes persist via the Java REST backend."
+---
+
+The Tienda de Playeras dashboard at `http://localhost:8000` gives you full control over your t-shirt product catalog. From a single interface you can view all available products, add new ones, update existing details, and remove items that are no longer offered — every action is relayed in real time to the Java/Tomcat REST backend.
+
+## Viewing Products
+
+When you open the dashboard, the Laravel frontend issues a `GET` request to the Java backend and renders the response as a responsive card grid (three columns on medium and wider screens). Each card displays:
+
+- **Product name** — shown as a blue heading
+- **ID** — the unique database identifier
+- **Talla** — size displayed as a badge (CH, M, G, or XG)
+- **Stock** — available units, e.g. "12 piezas"
+- **Price** — formatted as `$X.XX MXN`
+
+The data is fetched fresh on every page load from:
+
+```
+GET http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet
+```
+
+## Adding a Product
+
+<Steps>
+  <Step title="Open the Add Product modal">
+    Click the **"Agregar Nueva Playera"** button in the navbar. A Bootstrap modal will appear with an empty form ready to fill in.
+  </Step>
+  <Step title="Fill in the product details">
+    Complete all fields in the modal form:
+
+    | Field | Type | Notes |
+    |-------|------|-------|
+    | nombre | Text | Product name, e.g. "Playera Oversize Anime" |
+    | talla | Select | CH, M, G, or XG |
+    | precio | Decimal | Price in MXN, e.g. 299.90 |
+    | stock | Integer | Available units |
+
+    The **talla** field maps to the following size options:
+    - **CH** — Chica
+    - **M** — Mediana
+    - **G** — Grande
+    - **XG** — Extra Grande
+  </Step>
+  <Step title="Submit the form">
+    Click **"Guardar Producto"**. The form `POST`s to `/store`, which forwards the data to `ProductoServlet` with `accion=crear`:
+
+    ```php
+    Http::asForm()->post($this->apiUrl, [
+        'accion' => 'crear',
+        'nombre' => $request->nombre,
+        'talla'  => $request->talla,
+        'precio' => $request->precio,
+        'stock'  => $request->stock
+    ]);
+    ```
+  </Step>
+  <Step title="Confirm success">
+    After a successful create, you are redirected back to the catalog and a green flash message appears: **"¡Playera agregada con éxito!"**
+  </Step>
+</Steps>
+
+## Editing a Product
+
+<Steps>
+  <Step title="Open the Edit modal">
+    Click the **"✏️ Editar"** button in the footer of any product card. A Bootstrap modal opens with all fields pre-filled with the product's current values.
+  </Step>
+  <Step title="Modify the desired fields">
+    Update any combination of **nombre**, **talla**, **precio**, or **stock**. The size select and all other inputs work identically to the Add Product form.
+  </Step>
+  <Step title="Save your changes">
+    Click **"Guardar Cambios"**. The form uses `@method('PUT')` for Laravel method spoofing and submits to `/update/{id}`, which issues a `PUT` request to the backend:
+
+    ```php
+    Http::put($this->apiUrl . "?id={$id}&nombre=" . urlencode($request->nombre)
+        . "&talla={$request->talla}&precio={$request->precio}&stock={$request->stock}");
+    ```
+  </Step>
+  <Step title="Confirm success">
+    You are redirected back to the catalog and a green flash message appears: **"¡Playera actualizada correctamente!"**
+  </Step>
+</Steps>
+
+## Deleting a Product
+
+To permanently remove a product from the catalog, click the **"🗑️ Borrar"** button on its card. A native browser confirmation dialog will appear:
+
+> ¿Seguro que deseas eliminar esta playera permanentemente?
+
+Confirm the dialog to proceed. The form uses `@method('DELETE')` for Laravel method spoofing and submits to `/destroy/{id}`, which sends a `DELETE` request to the backend:
+
+```php
+Http::delete($this->apiUrl . "?id={$id}");
+```
+
+On success, a green flash message appears: **"¡Playera eliminada del catálogo!"**
+
+<Warning>
+  Deletion is **permanent**. There is no soft delete, recycle bin, or undo functionality. Once a product is removed from the database it cannot be recovered through the dashboard.
+</Warning>

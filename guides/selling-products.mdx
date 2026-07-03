@@ -1,0 +1,78 @@
+---
+title: "Process Sales and Track Inventory"
+sidebarTitle: "Selling Products"
+description: "Learn how to process t-shirt sales in Tienda de Playeras. The system atomically decrements stock in MySQL, preventing overselling on every transaction."
+---
+
+Tienda de Playeras includes a built-in sell workflow that lets you record sales directly from the product catalog. When a sale is confirmed, the system atomically decrements the product's stock in MySQL using a guarded `UPDATE` statement, ensuring the count can never drop below zero — even under concurrent requests.
+
+## Processing a Sale
+
+<Steps>
+  <Step title="Locate the product card">
+    Navigate to the catalog at `http://localhost:8000`. Find the product you want to sell in the card grid. Each card displays the current stock count ("X piezas") so you can confirm availability at a glance.
+  </Step>
+  <Step title="Enter the sale quantity">
+    In the card footer, type the desired quantity into the numeric input field. The input enforces `min=1` and `max=current stock`, so you cannot accidentally enter a value that exceeds available inventory from the UI.
+  </Step>
+  <Step title="Confirm the sale">
+    Click **"🛒 Confirmar Venta"** to submit the sale. If stock is zero, this button is replaced by an **"Agotado"** label and is disabled — no action can be taken until the product is restocked.
+  </Step>
+  <Step title="Request reaches Laravel">
+    The form `POST`s to `/vender/{id}` with the `cantidad` field. Laravel's `PlayerasController` forwards the request to the Java backend:
+
+    ```php
+    Http::asForm()->post($this->apiUrl, [
+        'accion'   => 'vender',
+        'id'       => (int)$id,
+        'cantidad' => (int)$request->cantidad
+    ]);
+    ```
+  </Step>
+  <Step title="Backend processes the transaction">
+    `ProductoServlet` receives `accion=vender`, `id`, and `cantidad`, then delegates to `ProductoDAO`, which executes an atomic SQL update against the MySQL database:
+
+    ```sql
+    UPDATE productos SET stock = stock - ? WHERE id = ? AND stock >= ?
+    ```
+
+    The `AND stock >= ?` condition is the server-side guard — the row is only updated when sufficient stock exists. If the condition is not met, zero rows are affected and the stock remains unchanged.
+  </Step>
+  <Step title="Confirm success">
+    On a successful sale you are redirected back to the catalog and a green flash message appears: **"¡Venta procesada con éxito!"** The updated stock count is immediately reflected in the product card.
+  </Step>
+</Steps>
+
+## Inventory Guard
+
+The core of oversell prevention is a single atomic SQL statement executed by `ProductoDAO`:
+
+```sql
+UPDATE productos SET stock = stock - ? WHERE id = ? AND stock >= ?
+```
+
+Because the stock check and decrement happen inside one `UPDATE`, the database engine handles the atomicity — there is no window between a `SELECT` and an `UPDATE` where a concurrent request could read the same stock value and both succeed. If two sale requests for the last unit arrive simultaneously, only one will match the `AND stock >= ?` condition; the other will affect zero rows and leave the stock at zero without going negative.
+
+<Note>
+  The sell button is also disabled in the UI whenever a product's stock reaches zero, using the following Blade expression:
+
+  ```blade
+  {{ $playera['stock'] <= 0 ? 'disabled' : '' }}
+  ```
+
+  This client-side guard provides immediate visual feedback and prevents accidental form submissions, complementing the server-side SQL check.
+</Note>
+
+## Out-of-Stock Behavior
+
+When a product's stock reaches `0`, the catalog card changes automatically:
+
+- The sell button label changes to **"Agotado"** and becomes disabled.
+- The quantity input is also disabled, preventing any input.
+- No sale can be submitted from the UI until stock is replenished.
+
+To restock a product, use the **Edit Product** workflow: click **"✏️ Editar"** on the product card, update the **stock** field to the new available quantity, and save. The sell controls will re-enable as soon as the updated page loads.
+
+<Tip>
+  The quantity input defaults to `1`, so a single click on **"🛒 Confirmar Venta"** is all it takes to record a one-unit sale. You can increase the value up to the product's current stock before confirming if you need to log a multi-unit transaction.
+</Tip>
