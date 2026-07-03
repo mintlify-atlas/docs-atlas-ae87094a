@@ -1,5 +1,5 @@
 ---
-title: "Process Sales and Track Inventory"
+title: "Process T-Shirt Sales and Track Inventory in Real Time"
 sidebarTitle: "Selling Products"
 description: "Learn how to process t-shirt sales in Tienda de Playeras. The system atomically decrements stock in MySQL, preventing overselling on every transaction."
 ---
@@ -56,7 +56,7 @@ Because the stock check and decrement happen inside one `UPDATE`, the database e
 <Note>
   The sell button is also disabled in the UI whenever a product's stock reaches zero, using the following Blade expression:
 
-  ```blade
+  ```php
   {{ $playera['stock'] <= 0 ? 'disabled' : '' }}
   ```
 

@@ -1,5 +1,5 @@
 ---
-title: "DELETE /ProductoServlet — Remove a Product"
+title: "DELETE /ProductoServlet — Permanently Remove a Product"
 sidebarTitle: "Delete Product"
 description: "DELETE /ServidorTiendaPlayeras/ProductoServlet?id={id} to permanently remove a product from the database. Returns a JSON success flag."
 ---
@@ -29,6 +29,12 @@ The `PlayerasController::destroy()` method appends the `id` directly to the base
 
 ```php
 Http::delete($this->apiUrl . "?id={$id}");
+```
+
+### SQL Executed
+
+```sql
+DELETE FROM productos WHERE id = ?
 ```
 
 ## Response

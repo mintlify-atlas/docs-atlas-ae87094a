@@ -1,7 +1,7 @@
 ---
-title: "POST /ProductoServlet — Sell a Product"
+title: "POST /ProductoServlet — Sell a Product and Decrement Stock"
 sidebarTitle: "Sell Product"
-description: "POST /ServidorTiendaPlayeras/ProductoServlet with accion=vender to decrement a product's stock. Returns false if stock is insufficient, preventing overselling."
+description: "POST /ServidorTiendaPlayeras/ProductoServlet with accion=vender to decrement stock atomically. Returns false when stock is insufficient."
 ---
 
 Sending a `POST` request with `accion=vender` decrements the `stock` of a product by a given quantity. The operation is **atomic**: the SQL statement only executes the decrement if the current stock is sufficient, preventing overselling even under concurrent requests. If the update affects zero rows — because the product does not exist or has insufficient stock — the servlet returns `{"success": false}`.
@@ -41,8 +41,14 @@ The `PlayerasController::vender()` method casts both `id` and `cantidad` to inte
 Http::asForm()->post($this->apiUrl, [
     'accion'   => 'vender',
     'id'       => (int) $id,
-    'cantidad' => (int) $cantidad,
+    'cantidad' => (int) $request->cantidad,
 ]);
+```
+
+### SQL Executed
+
+```sql
+UPDATE productos SET stock = stock - ? WHERE id = ? AND stock >= ?
 ```
 
 ## Response

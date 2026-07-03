@@ -1,5 +1,5 @@
 ---
-title: "GET /ProductoServlet — List All Products"
+title: "GET /ProductoServlet — Retrieve All T-Shirt Products"
 sidebarTitle: "List Products"
 description: "GET /ServidorTiendaPlayeras/ProductoServlet — retrieves all products from the database. Returns a JSON array of Producto objects, or [] if empty."
 ---
@@ -17,6 +17,12 @@ No parameters are accepted or required for this endpoint.
 
 ```bash
 curl http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet
+```
+
+### PHP (Laravel) Example
+
+```php
+$response = Http::get($this->apiUrl);
 ```
 
 ## Response

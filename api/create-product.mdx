@@ -1,5 +1,5 @@
 ---
-title: "POST /ProductoServlet — Create a Product"
+title: "POST /ProductoServlet — Insert a New T-Shirt Product"
 sidebarTitle: "Create Product"
 description: "POST /ServidorTiendaPlayeras/ProductoServlet with accion=crear to insert a new t-shirt product. Accepts form-encoded parameters, returns JSON success flag."
 ---
@@ -53,6 +53,12 @@ Http::asForm()->post($this->apiUrl, [
     'precio'  => $request->precio,
     'stock'   => $request->stock,
 ]);
+```
+
+### SQL Executed
+
+```sql
+INSERT INTO productos (nombre, talla, precio, stock) VALUES (?, ?, ?, ?)
 ```
 
 ## Response

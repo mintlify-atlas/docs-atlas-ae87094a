@@ -1,7 +1,7 @@
 ---
-title: "PUT /ProductoServlet — Update a Product"
+title: "PUT /ProductoServlet — Update an Existing Product by ID"
 sidebarTitle: "Update Product"
-description: "PUT /ServidorTiendaPlayeras/ProductoServlet?id={id}&... to update all fields of a product by ID. Accepts query-string parameters, returns JSON success flag."
+description: "PUT /ServidorTiendaPlayeras/ProductoServlet — update all fields of a product by ID via query-string parameters. Returns JSON success flag."
 ---
 
 Sending a `PUT` request to the `ProductoServlet` endpoint updates all fields of an existing product identified by its `id`. All parameters are passed as **query-string values** rather than a request body — this is intentional, because Tomcat's built-in servlet infrastructure does not parse `PUT` request bodies as form parameters, making query strings the most reliable approach for passing data through `doPut()`.
@@ -47,11 +47,17 @@ The `PlayerasController::update()` method builds the query string manually, usin
 Http::put(
     $this->apiUrl
         . "?id={$id}"
-        . "&nombre=" . urlencode($nombre)
-        . "&talla={$talla}"
-        . "&precio={$precio}"
-        . "&stock={$stock}"
+        . "&nombre=" . urlencode($request->nombre)
+        . "&talla={$request->talla}"
+        . "&precio={$request->precio}"
+        . "&stock={$request->stock}"
 );
+```
+
+### SQL Executed
+
+```sql
+UPDATE productos SET nombre = ?, talla = ?, precio = ?, stock = ? WHERE id = ?
 ```
 
 ## Response

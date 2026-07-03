@@ -1,7 +1,7 @@
 ---
 title: "System Architecture: How the SOA Components Connect"
 sidebarTitle: "Architecture"
-description: "Explore how the Java/Jakarta EE backend and Laravel frontend are decoupled in a service-oriented architecture, communicating via HTTP REST calls over localhost."
+description: "How the Java/Jakarta EE backend and Laravel frontend are decoupled in a service-oriented architecture, communicating via HTTP REST calls over localhost."
 ---
 
 Tienda de Playeras is designed around a **Service-Oriented Architecture (SOA)** pattern: each capability of the system is encapsulated in a discrete, self-contained service that communicates with other services over a well-defined network interface. In practice this means the Java backend is the sole owner of business rules and data, exposing them as an HTTP/JSON API, while the Laravel frontend is a pure consumer of that API — it holds no business logic and has no direct database access. The two services run as separate processes on the same machine and communicate exclusively through HTTP calls over localhost.
@@ -12,7 +12,7 @@ Tienda de Playeras is designed around a **Service-Oriented Architecture (SOA)** 
 
 `ServidorTiendaPlayeras` is packaged as a WAR and deployed on **Apache Tomcat**, listening on **port 8080**. Its entry point is a single Jakarta EE servlet:
 
-```
+```text
 http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet
 ```
 
@@ -36,7 +36,7 @@ The following steps trace a complete round-trip for any user action (create, rea
   <Step title="PlayerasController forwards the call to the Java API">
     The controller method constructs an outbound HTTP request using `Illuminate\Support\Facades\Http` and sends it to the hardcoded backend URL:
 
-    ```
+    ```text
     http://localhost:8080/ServidorTiendaPlayeras/ProductoServlet
     ```
 
